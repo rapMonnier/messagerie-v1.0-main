@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="styles/style.css">
+    <meta name="description" content="Free Web tutorials">
+    <meta name="viewport" content="width=device-width, 
+        initial-scale=1.0">
+    <title>log</title>
+</head>
+
+<body>
+    <script src="http://code.jquery.com/jquery-1.10.1.min.js"></script>
+    <script src="socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+        var me;
+        var loginCheck = function () {
+            socket.emit('login', {
+                pseudo: $('#msg-log').val(),
+                mdp: $('#mdp-log').val(),
+                avatar: "img"
+            });
+            $('#msg-log').val("");
+            $('#mdp-log').val("");
+        }
+
+        var registerCheck = function () {
+            socket.emit('register', {
+                pseudo: $('#msg-reg').val(),
+                mdp: $('#mdp-reg').val(),
+                avatar: "img"
+            });
+            $('#msg-reg').val("");
+            $('#mdp-reg').val("");
+        }
+        socket.on('alert', function (msg) {
+            alert(msg);
+        })
+
+        socket.on('alert-log-good', function (user, msg) {
+            me = user;
+            alert(msg);
+            $("#first").fadeOut();
+        })
+    </script>
+    <div class="acceuil" id="first">
+        <div class="form-box">
+            <div class="button-box">
+                <div id="btn"></div> <!-- div qui permet le petit onglet de switch-->
+                <button class="toggle-btn" onclick="logined()">Login</button>
+                <button class="toggle-btn" onclick="registered()">Register</button>
+            </div>
+            <form id="login" class="input-group">
+                <input id="msg-log" type="text" class="input-field" placeholder="Enter Name" required>
+                <input id="mdp-log" type="password" class="input-field" placeholder="Enter Password" required>
+                <button type="submit" class="submit-btn-log" onclick="loginCheck()">Log In</button>
+            </form>
+            <form id="register" class="input-group">
+                <input id="msg-reg" type="text" class="input-field" placeholder="Enter Name" required>
+                <input id="mdp-reg" type="password" class="input-field" placeholder="Enter Password" required>
+                <button type="submit" class="submit-btn-reg" onclick="registerCheck()">Register</button>
+            </form>
+        </div>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <img src="styles/ressources/avatar2.jpg">
+            <img src="styles/ressources/avatar2.jpg">
+            <img src="styles/ressources/avatar2.jpg">
+            <img src="styles/ressources/avatar2.jpg">
+            <img src="styles/ressources/avatar2.jpg">
+            <img src="styles/ressources/avatar2.jpg">
+            <img src="styles/ressources/avatar2.jpg">
+        </div>
+        <div class="main-page">
+            <div class="header">
+                <div class="dark-theme-switch">
+                    <img id="dark-theme-icon" src="styles/ressources/moon.png">
+                </div>
+            </div>
+            <div class="conversation"></div>
+            <form class="chat-form">
+                <div class="container-inputs-stuffs">
+                    <div class="files-logo-cont">
+                        <img id="paperclip-svg" src="styles/ressources/paperclip.svg">
+                    </div>
+                    <div class="group-inp">
+                        <textarea id="comment" placeholder="Enter your message here" minlength="1"
+                            maxlength="2000"></textarea>
+                        <img id="smile-svg" src="styles/ressources/smile.svg">
+                    </div>
+                    <div class="submit-msg-btn">
+                        <img id="send-svg" src="styles/ressources/send.svg">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- script des message -->
+    <script>
+        $(function () {
+            var socket = io();
+
+            $('form').submit(function (event) {
+                event.preventDefault();
+
+                socket.emit("chat-msg", me, $("#msg").val());
+                $("#msg").val("");
+                return false;
+            });
+            $('#comment').keypress(function (event) {
+                if (event.which == 13 && !event.shiftKey) {
+                    var comment = $.trim($("#comment").val());
+                    if (comment != "") {
+                        socket.emit("chat-msg", comment);
+                        $("#comment").val("");
+                        return false;
+                    }
+                }
+            });
+            /* click Button message*/
+            $('#send-svg').click(function (event) {
+                var comment = $.trim($("#comment").val());
+                if (comment != "") {
+                    socket.emit("chat-msg", comment);
+                    $("#comment").val("");
+                    return false;
+                }
+            });
+            /* message Submit into the html*/
+            socket.on('chat-msg', function (msg) {
+                appendMessage(msg);
+            });
+
+            var appendMessage = function (message) {
+                var now = new Date();
+                var messageContainer = $("<div>").addClass("talk left");
+                var messageAvatar = $("<img>").attr('src', 'styles/ressources/avatar2.jpg');
+                if (now.getMinutes() < 10) {
+                    var messageText = $("<p>").text(now.getHours() + "h0" + now.getMinutes() + " " + message);
+                }
+                else var messageText = $("<p>").text(now.getHours() + "h" + now.getMinutes() + " " + message);
+
+                messageContainer.append(messageAvatar);
+                messageContainer.append(messageText);
+                console.log(messageContainer)
+                $(".conversation").append(messageContainer);
+                $(".conversation").scrollTop($(".conversation")[0].scrollHeight);
+            }
+
+            /* dark theme switch*/
+            $('#dark-theme-icon').click(function (event) {
+                document.body.classList.toggle("dark-theme")
+                if (document.body.classList.contains("dark-theme")) {
+                    $("#dark-theme-icon").attr("src", "styles/ressources/sun.png");
+                    $("#paperclip-svg").attr("src", "styles/ressources/white-paperclip.svg");
+                    $("#smile-svg").attr("src", "styles/ressources/white-smile.svg");
+                    $("#send-svg").attr("src", "styles/ressources/white-send.svg");
+                }
+                else {
+                    $("#dark-theme-icon").attr("src", "styles/ressources/moon.png");
+                    $("#paperclip-svg").attr("src", "styles/ressources/paperclip.svg");
+                    $("#smile-svg").attr("src", "styles/ressources/smile.svg");
+                    $("#send-svg").attr("src", "styles/ressources/send.svg");
+                }
+            });
+            /*socket.on('chat-msg', function (me, msg) {
+                var now = new Date();
+                $('#message').append($("<p>").text(now.getHours() + "h" + now.getMinutes() + " " + me.pseudo + ": " + msg))
+            });*/
+
+        });
+    </script>
+    <!-- script des switch de page login -->
+    <script lang="javascript">
+        var login = document.getElementById('login');
+        var register = document.getElementById('register');
+        var btn = document.getElementById('btn');
+
+        function registered() {
+            login.style.left = "-400px";
+            register.style.left = "50px";
+            btn.style.left = "110px";
+            btn.style.background = "linear-gradient(to right, #580000,#7e0000)";
+        }
+        function logined() {
+            login.style.left = "50px";
+            register.style.left = "450px"
+            btn.style.left = "0"
+            btn.style.background = "linear-gradient(to right, #000052,#00009e)";
+        }
+    </script>
+    <!-- script gestion envoie msg -->
+</body>
+
+</html>
