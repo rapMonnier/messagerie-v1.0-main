@@ -12,8 +12,10 @@ var io = require('socket.io')(serveur);
 
 var listRegister = JSON.parse(readFileSync('register.json', 'utf8'));
 var listLoggedIn = []
+var message = JSON.parse(readFileSync('mainpage.json', 'utf8'));
 
 io.on('connect', function (socket) {
+    
     socket.on('register', function (user) {
         console.log(user.pseudo + " à essayé de ce register");
         var res = false;
@@ -50,6 +52,11 @@ io.on('connect', function (socket) {
                 if (n.pseudo == user.pseudo && n.mdp == user.mdp) {
                     socket.emit('alert-log-good', user, "Bienvenue " + user.pseudo + " !");
                     listLoggedIn.push(user);
+                    for (u in listLoggedIn)
+                    {
+                        io.emit('newuser', u);
+                    }
+                    console.log(listLoggedIn);
                     res = true;
                     break;
                 }
@@ -67,7 +74,19 @@ io.on('connect', function (socket) {
 
     socket.on('chat-msg', function (user, msg) {
         io.emit('chat-msg', user, msg);
+        var now = new Date();
+        var tmp = {"user": user, "msg":msg, "time": now.getDate()};
+        message.push(tmp);
+        const listToJSON = JSON.stringify(message);
+        writeFileSync('mainpage.json', listToJSON, 'utf8');
     });
+    
+    /*socket.on('charge-page', function(){
+        for (m of message)
+        {
+            io.emit('chat-msg', m["user"], m["msg"]);
+        }
+    });*/
 });
 
 io.on('disconnect', function (socket){

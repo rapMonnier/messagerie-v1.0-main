@@ -15,12 +15,11 @@
     <script src="socket.io/socket.io.js"></script>
     <script>
         var socket = io();
-        var me;
         var loginCheck = function () {
             socket.emit('login', {
                 pseudo: $('#msg-log').val(),
                 mdp: $('#mdp-log').val(),
-                avatar: "img"
+                avatar: "styles/ressources/avatar2.jpg"
             });
             $('#msg-log').val("");
             $('#mdp-log').val("");
@@ -30,7 +29,7 @@
             socket.emit('register', {
                 pseudo: $('#msg-reg').val(),
                 mdp: $('#mdp-reg').val(),
-                avatar: "img"
+                avatar: "styles/ressources/avatar3.jpg"
             });
             $('#msg-reg').val("");
             $('#mdp-reg').val("");
@@ -40,9 +39,9 @@
         })
 
         socket.on('alert-log-good', function (user, msg) {
-            me = user;
             alert(msg);
             $("#first").fadeOut();
+            $(".sidebar").append(user.avatar);
         })
     </script>
     <div class="acceuil" id="first">
@@ -66,13 +65,6 @@
     </div>
     <div class="container">
         <div class="sidebar">
-            <img src="styles/ressources/avatar2.jpg">
-            <img src="styles/ressources/avatar2.jpg">
-            <img src="styles/ressources/avatar2.jpg">
-            <img src="styles/ressources/avatar2.jpg">
-            <img src="styles/ressources/avatar2.jpg">
-            <img src="styles/ressources/avatar2.jpg">
-            <img src="styles/ressources/avatar2.jpg">
         </div>
         <div class="main-page">
             <div class="header">
@@ -114,7 +106,7 @@
                 if (event.which == 13 && !event.shiftKey) {
                     var comment = $.trim($("#comment").val());
                     if (comment != "") {
-                        socket.emit("chat-msg", comment);
+                        socket.emit("chat-msg",me, comment);
                         $("#comment").val("");
                         return false;
                     }
@@ -124,16 +116,19 @@
             $('#send-svg').click(function (event) {
                 var comment = $.trim($("#comment").val());
                 if (comment != "") {
-                    socket.emit("chat-msg", comment);
+                    socket.emit("chat-msg",me, comment);
                     $("#comment").val("");
                     return false;
                 }
             });
             /* message Submit into the html*/
-            socket.on('chat-msg', function (msg) {
+            socket.on('chat-msg', function (me, msg, time) {
                 appendMessage(msg);
             });
 
+            socket.on('newuser', function (user){
+                $('.sidebar').append(user.avatar);
+            });
             var appendMessage = function (message) {
                 var now = new Date();
                 var messageContainer = $("<div>").addClass("talk left");
@@ -166,10 +161,6 @@
                     $("#send-svg").attr("src", "styles/ressources/send.svg");
                 }
             });
-            /*socket.on('chat-msg', function (me, msg) {
-                var now = new Date();
-                $('#message').append($("<p>").text(now.getHours() + "h" + now.getMinutes() + " " + me.pseudo + ": " + msg))
-            });*/
 
         });
     </script>
